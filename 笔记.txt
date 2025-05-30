@@ -1,0 +1,73 @@
+MCP：Model context protocol     本质上目的是为了提供一个良好的上下文，协议通过标准化接口重构AI与外部系统的交互模式，其核心架构包含三大模块：
+/````````````````````````````````````````````````````````````````````````````````````````````````````````
+| MCP Server：数据与工具的“翻译官”，封装数据库/API等资源
+| MCP Client：智能模型的“接线员”，协调LLM与服务器通信
+| 传输协议：支持SSE远程通信或stdio本地管道
+\________________________________________________________________
+
+host协调各个Client，每个Client对应一个 local 或者 remote 的 server，具有一个特定的application。
+综合其本质来说，server提供定制化的上下文和功能（capability），并且以任何client都可以使用的方式暴露出 tools、resource(context)、prompt（三种 primitives，使 client、server和host language model之间进行丰富的交互）
+
+## Server 的三个 features
+Prompts：可由用户控制，从服务器暴露给客户端，目的是让用户能够显式地选择使用它们
+
+Resources(context)：应用程序驱动的，主机应用程序决定如何根据其需求合并上下文
+每个 resource 由 URI 唯一标识
+
+Tools：由模型控制，语言模型可以根据上下文理解和用户提示自动发现和调用工具
+MCP允许服务器公开可由语言模型调用的 tools。tools 使模型能够与外部系统进行交互，例如查询数据库、调用api或执行计算。每个 tool 都由 name 唯一标识，并包含描述其模式的元数据。
+
+## Client 的两个 features
+Roots：定义了 Server 可以在文件系统中操作的边界，允许它们明确自己可以访问哪些目录和文件，server 可以从对接的 client 请求根列表
+root 的定义需要包含 uri 和 name，分别对应 server 的 resource 和 tool。
+
+
+#################
+协议定义了4种类型的消息：
+Request：期望得到响应的消息
+Notification：不需要响应的消息
+Result：请求响应成功
+Error：请求响应失败
+
+#################
+一个MCP项目需要包含Client.py Server.py，并且还需要创建出 .env 以供查询需要的环境变量
+
+Server端调试：
+需要安装node环境，然后运行官方提供的Inspector：
+npx -y @modelcontextprotocol/inspector <command> <arg1> <arg2>
+一般来说就是：
+npx -y @modelcontextprotocol/inspector uv run <runnable python file>
+然后打开弹出的网页即可调试
+
+#################
+Deepseek api的调用例子：
+
+from openai import OpenAI
+
+client = OpenAI(api_key="<DeepSeek API Key>", base_url="https://api.deepseek.com")
+
+response = client.chat.completions.create(
+    model="deepseek-chat",
+    messages=[
+        {"role": "system", "content": "You are a helpful assistant"},
+        {"role": "user", "content": "Hello"},
+    ],
+    stream=False
+)
+print(response.choices[0].message.content)
+
+####################
+网易邮箱授权密码：MSd8DYtQHhSXduJE
+deepseek api key：sk-335d4c1e37ef45e1a59d2897fb255888
+####################
+
+
+
+
+
+
+
+
+
+
+
