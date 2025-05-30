@@ -56,11 +56,6 @@ response = client.chat.completions.create(
 )
 print(response.choices[0].message.content)
 
-####################
-网易邮箱授权密码：MSd8DYtQHhSXduJE
-deepseek api key：sk-335d4c1e37ef45e1a59d2897fb255888
-####################
-
 
 
 
